@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>@{{ target_user.username }} - Profile</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 30px; }
+        .container { max-width: 720px; margin: auto; }
+        .card { background: #fff; padding: 20px; margin-bottom: 18px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
+        a { color: #2563eb; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <p><a href="{% url 'post_list' %}">&larr; Back to Feed</a></p>
+    <div class="card">
+        <h1>@{{ target_user.username }}</h1>
+        <p>{{ profile.bio|default:"No bio added yet." }}</p>
+        <p>
+            <strong>Following:</strong> {{ profile.following.count }} |
+            <strong>Followers:</strong> {{ target_user.followers.count }}
+        </p>
+    </div>
+    <h2>Posts by @{{ target_user.username }}</h2>
+    {% for post in posts %}
+        <div class="card">
+            <small style="color: #6b7280;">{{ post.created_at }}</small>
+            <p>{{ post.content }}</p>
+            <p><strong>Likes:</strong> {{ post.total_likes }} | <strong>Comments:</strong> {{ post.comments.count }}</p>
+        </div>
+    {% empty %}
+        <div class="card"><p>No posts from this user yet.</p></div>
+    {% endfor %}
+</div>
+</body>
+</html>

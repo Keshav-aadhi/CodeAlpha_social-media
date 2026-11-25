@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CodeAlpha Social Media</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 30px; }
+        .container { max-width: 720px; margin: auto; }
+        .card { background: #fff; padding: 20px; margin-bottom: 18px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
+        textarea { width: 100%; height: 75px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        input[type="text"] { width: 75%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn { background: #2563eb; color: #fff; padding: 8px 14px; border: none; border-radius: 5px; text-decoration: none; display: inline-block; cursor: pointer; font-size: 14px; }
+        .btn-like { background: #dc2626; }
+        .btn-follow { background: #059669; padding: 5px 10px; font-size: 12px; }
+        .comment { background: #f9fafb; padding: 8px 10px; border-radius: 5px; margin-top: 8px; font-size: 14px; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
+        a { color: #2563eb; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Mini Social Media Platform</h1>
+    <p>
+        {% if request.user.is_authenticated %}
+            Signed in as <strong><a href="{% url 'user_profile' request.user.username %}">@{{ request.user.username }}</a></strong> |
+            Following: <strong>{{ current_profile.following.count }}</strong> |
+            Followers: <strong>{{ request.user.followers.count }}</strong> |
+            <a href="/admin/">Admin</a>
+        {% else %}
+            You are browsing as guest. <a href="/admin/login/">Log in</a> or <a href="{% url 'register' %}">Sign up</a> to post, like, comment, or follow.
+        {% endif %}
+    </p>
+
+    {% if request.user.is_authenticated %}
+    <div class="card">
+        <h3>Create a Post</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <textarea name="content" placeholder="Share an update..." required></textarea>
+            <br><br>
+            <button type="submit" class="btn">Publish Post</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <h3>Users</h3>
+        {% for u in users %}
+            <div class="user-row">
+                <span><strong><a href="{% url 'user_profile' u.username %}">@{{ u.username }}</a></strong></span>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'toggle_follow' u.id %}" class="btn btn-follow">
+                        {% if current_profile and u in current_profile.following.all %}
+                            Unfollow
+                        {% else %}
+                            Follow
+                        {% endif %}
+                    </a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No other users yet. <a href="{% url 'register' %}">Register a second user</a> to test following!</p>
+        {% endfor %}
+    </div>
+
+    <h2>Feed</h2>
+    {% for post in posts %}
+        <div class="card">
+            <p><strong><a href="{% url 'user_profile' post.user.username %}">@{{ post.user.username }}</a></strong> <small style="color: #6b7280;">{{ post.created_at }}</small></p>
+            <p>{{ post.content }}</p>
+            <p>
+                <a href="{% url 'toggle_like' post.id %}" class="btn {% if request.user in post.likes.all %}btn-like{% endif %}">
+                    Like ({{ post.total_likes }})
+                </a>
+            </p>
+            <hr>
+            <h4>Comments</h4>
+            {% for comment in post.comments.all %}
+                <div class="comment">
+                    <strong>@{{ comment.user.username }}:</strong> {{ comment.body }}
+                </div>
+            {% empty %}
+                <p style="color: #6b7280; font-size: 13px;">No comments yet.</p>
+            {% endfor %}
+
+            {% if request.user.is_authenticated %}
+                <form method="POST" action="{% url 'add_comment' post.id %}" style="margin-top: 10px;">
+                    {% csrf_token %}
+                    <input type="text" name="body" placeholder="Write a comment..." required>
+                    <button type="submit" class="btn">Comment</button>
+                </form>
+            {% endif %}
+        </div>
+    {% empty %}
+        <div class="card"><p>No posts yet. Create the first post above!</p></div>
+    {% endfor %}
+</div>
+</body>
+</html>
